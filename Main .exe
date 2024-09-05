@@ -1,0 +1,261 @@
+import tkinter as tk
+from tkinter import *
+import shutil
+from PIL import Image, ImageDraw, ImageFont
+import os
+from pathlib import Path
+from tkinter import ttk
+
+def file_transfer_imageonly():
+    dst = entry2.get()
+    if os.path.exists(dst):
+        result_label.config(text = "Output path exist, please add a subfolder, such as: \TEM ", fg="red")
+    else:
+        source = entry1.get()  # Get the text from the Entry widget
+        dst = entry2.get()  # Get the text from the Entry widget
+        shutil.copytree(source, dst, ignore=shutil.ignore_patterns('*.dm3', 'tmp*', '*.dm4', '*.emd', '*.dmw', '*.PCI', '*.txt'))
+        result_label.config(text=f"Files are transferred to: {dst}", fg="green")
+
+def file_transfer_all():
+    dst = entry2.get()
+    if os.path.exists(dst):
+        result_label.config(text = "Output path exist, please add a subfolder, such as: \TEM ", fg="red")
+    else:
+        source = entry1.get()  # Get the text from the Entry widget
+        dst = entry2.get()  # Get the text from the Entry widget
+        shutil.copytree(source, dst)
+        result_label.config(text=f"Files are transferred to: {dst}", fg="green")
+
+def water_mark():
+    image_path = entry2.get()
+    dest_path = entry2.get()
+    text = 'DACS/PCL'
+    for root, dirs, files in os.walk(dest_path):
+        for file in files:
+            fp = os.path.join(root, file)
+            if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('tif') or fp.endswith('bmp') or fp.endswith('TIF'):
+                img=Image.open(fp)
+                width, height = img.size
+                fnt = ImageFont.truetype("arial.ttf", (width + height) / 50)
+
+                d = ImageDraw.Draw(img)
+                position = (width * 0.05, height * 0.82)
+                text = "DACS/PCL"
+                if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('bmp') :
+                    bbox = d.textbbox(position, text, font=fnt)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill="black")
+                if fp.endswith('.TIF'):
+                    text_color = (0)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill=text_color)
+                img.save(fp)
+            result_label.config(text="water mark added", fg="green")
+def customized_watermark():
+    image_path = entry2.get()
+    dest_path = entry2.get()
+    wm_text = entry3.get()
+    x = float(entry4.get())
+    y = float(entry5.get())
+    for root, dirs, files in os.walk(dest_path):
+        for file in files:
+            fp = os.path.join(root, file)
+            if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('tif') or fp.endswith('bmp') or fp.endswith(
+                        'TIF'):
+                img = Image.open(fp)
+                width, height = img.size
+                fnt = ImageFont.truetype("arial.ttf", (width + height) / 50)
+                d = ImageDraw.Draw(img)
+                position = (width * x, height * y)
+                text = wm_text
+                if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('bmp'):
+                    bbox = d.textbbox(position, text, font=fnt)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill="black")
+                if fp.endswith('.TIF'):
+                    text_color = (0)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill=text_color)
+                img.save(fp)
+        result_label.config(text="customized water mark added", fg="green")
+
+def customized_imagelabel_name():
+    image_path = entry2.get()
+    dest_path = entry2.get()
+    for root, dirs, files in os.walk(dest_path):
+        for file in files:
+            fp = os.path.join(root, file)
+            wm_text = os.path.basename(fp).split('/')[-1]
+            if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('tif') or fp.endswith('bmp') or fp.endswith(
+                        'TIF'):
+                img = Image.open(fp)
+                width, height = img.size
+                fnt = ImageFont.truetype("arial.ttf", (width + height) / 50)
+                d = ImageDraw.Draw(img)
+                position = (0, 0)
+                text = wm_text
+                if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('bmp'):
+                    bbox = d.textbbox(position, text, font=fnt)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill="black")
+                if fp.endswith('.TIF'):
+                    text_color = (0)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill=text_color)
+                img.save(fp)
+        result_label.config(text="file name label added", fg="green")
+def customized_imagelabel_path():
+    image_path = entry2.get()
+    dest_path = entry2.get()
+    for root, dirs, files in os.walk(dest_path):
+        for file in files:
+            fp = os.path.join(root, file)
+            wm_text = os.path.basename(os.path.dirname(fp))
+            if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('tif') or fp.endswith('bmp') or fp.endswith(
+                        'TIF'):
+                img = Image.open(fp)
+                width, height = img.size
+                fnt = ImageFont.truetype("arial.ttf", (width + height) / 50)
+                d = ImageDraw.Draw(img)
+                position = (0, 0)
+                text = wm_text
+                if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('bmp'):
+                    bbox = d.textbbox(position, text, font=fnt)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill="black")
+                if fp.endswith('.TIF'):
+                    text_color = (0)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill=text_color)
+                img.save(fp)
+        result_label.config(text="file path label added", fg="green")
+
+def customized_imagelabel_path_name():
+    image_path = entry2.get()
+    dest_path = entry2.get()
+    for root, dirs, files in os.walk(dest_path):
+        for file in files:
+            fp = os.path.join(root, file)
+            wm_text = (os.path.basename(os.path.dirname(fp))+os.path.basename(fp).split('/')[-1])
+            if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('tif') or fp.endswith('bmp') or fp.endswith(
+                        'TIF'):
+                img = Image.open(fp)
+                width, height = img.size
+                fnt = ImageFont.truetype("arial.ttf", (width + height) / 50)
+                d = ImageDraw.Draw(img)
+                position = (0, 0)
+                text = wm_text
+                if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('bmp'):
+                    bbox = d.textbbox(position, text, font=fnt)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill="black")
+                if fp.endswith('.TIF'):
+                    text_color = (0)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill=text_color)
+                img.save(fp)
+        result_label.config(text="file path & name label added", fg="green")
+
+root = tk.Tk()
+root.title("Imaging Tool Box")
+
+frame_1 = tk.Frame (root, bg="lightblue")
+frame_1.grid (row = 0, rowspan = 7, column = 0, columnspan = 2, sticky = "nsew", padx = 2)
+
+textbox=tk.Label (root, text="TEM-FIB-SEM", bg="lightblue")
+textbox.grid(row = 1, rowspan = 1, column = 0, columnspan = 2, sticky = W, padx = 2)
+
+textbox1=tk.Label (root, text="Version 2.0\n x-zhu@ti.com", bg="#FFA500")
+textbox1.grid(row = 3, rowspan = 4, column = 0, columnspan = 2, sticky = W, padx = 2)
+
+label1 = tk.Label(root, text="Source Folder : ")
+label1.grid(row = 0, column = 2, sticky = W, pady = 2)
+
+entry1 = tk.Entry(root, width=30)
+entry1.grid(row = 0, column = 3, columnspan = 7, sticky = W, pady = 2)
+
+label2 = tk.Label(root, text="Output Path : ")
+label2.grid(row = 1, column = 2, sticky = W, pady = 2)
+
+entry2 = tk.Entry(root, width=30)
+entry2.grid(row = 1, column = 3, columnspan = 7,sticky = W, pady = 2)
+
+file_transfer_label = tk.Label(root, text="Please in put the source and output path", fg = "#705a08")
+file_transfer_label.grid(row = 4, column = 2, columnspan = 7, sticky = W, pady = 2)
+
+result_label = tk.Label(root, text="Result: ", fg = "green")
+result_label.grid(row = 5, column = 2, columnspan = 7, sticky = W, pady = 2)
+
+file_transfer_button = tk.Button(root, text="Transfer (image only)", command=file_transfer_imageonly)
+file_transfer_button.grid(row = 6, column = 2, sticky = W, pady = 2)
+
+file_transfer_button2 = tk.Button(root, text="Transfer (all file)", command=file_transfer_all)
+file_transfer_button2.grid(row = 6, column = 3, sticky = W, pady = 2)
+
+water_mark_button = tk.Button(root, text="Water Mark", command=water_mark)
+water_mark_button.grid (row = 6, column = 4, sticky = W, pady = 2)
+
+# label_blank = tk.Label(root, text=" ")
+# label_blank.grid(row = 7, column = 2, sticky = W, pady = 2)
+
+separator = ttk.Separator(root, orient='horizontal')
+separator.place(relx=0, rely=0.42, relwidth=3, relheight=1)
+
+label_Advanced = tk.Label(root, text="Customize water mark--content & position", fg = "#705a08")
+label_Advanced.grid(row = 10, column = 0, columnspan = 4, sticky = W, pady = 2)
+
+
+
+label3 = tk.Label(root, text="Please input water mark text: ")
+label3.grid(row = 11, column = 1,columnspan = 4, sticky = W, pady = 2)
+
+entry3 = tk.Entry(root, width=30)
+entry3.grid(row = 11, column = 3, columnspan = 7, sticky = W, pady = 2)
+
+label4 = tk.Label(root, text="Relative x position (from 0 to 1): ")
+label4.grid(row = 12, column = 1,columnspan = 4, sticky = W, pady = 2)
+
+entry4 = tk.Entry(root, width=30)
+entry4.grid(row = 12, column = 3, columnspan = 7, sticky = W, pady = 2)
+
+label5 = tk.Label(root, text="Relative y position (from 0 to 1): ")
+label5.grid(row = 13, column = 1,columnspan = 4, sticky = W, pady = 2)
+
+entry5 = tk.Entry(root, width=30)
+entry5.grid(row = 13, column = 3, columnspan = 7, sticky = W, pady = 2)
+
+label6 = tk.Label(root, text="(Act on images located in output path)")
+label6.grid(row = 14, column = 3,columnspan = 2, sticky = W, pady = 2)
+
+customized_wm_button = tk.Button(root, text="Customized Water Mark", command=customized_watermark)
+customized_wm_button.grid(row =14, column = 1, columnspan = 2, sticky = W, pady = 2)
+
+separator = ttk.Separator(root, orient='horizontal')
+separator.place(relx=0, rely=0.8, relwidth=3, relheight=1)
+
+label_Advanced = tk.Label(root, text="Customize image label--file name & path", fg = "#705a08")
+label_Advanced.grid(row = 15, column = 0, columnspan = 4, sticky = W, pady = 2)
+
+customized_wm_button = tk.Button(root, text="File Name", command=customized_imagelabel_name)
+customized_wm_button.grid(row =16, column = 1, sticky = W, pady = 2)
+
+customized_wm_button = tk.Button(root, text="File Path", command=customized_imagelabel_path)
+customized_wm_button.grid(row =16, column = 2, sticky = W, pady = 2)
+
+customized_wm_button = tk.Button(root, text="Path + Name", command=customized_imagelabel_path_name)
+customized_wm_button.grid(row =16, column = 3, sticky = W, pady = 2)
+
+label7 = tk.Label(root, text="  (Act on images located in output path)")
+label7.grid(row = 17, column = 1,columnspan = 2, sticky = W, pady = 2)
+
+root.mainloop()
