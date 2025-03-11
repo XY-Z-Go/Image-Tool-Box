@@ -1,0 +1,382 @@
+import tkinter as tk
+from tkinter import *
+import shutil
+from PIL import Image, ImageDraw, ImageFont
+import os
+from pathlib import Path
+from tkinter import ttk
+import re
+# 11
+import datetime as save
+import sys as img
+import json
+
+# File for saving the path and counters
+
+record_file = "C:/Imaging Tool Box Log/path_and_counters.json"
+
+
+# Function to create default record data if the file doesn't exist
+
+def initialize_record_file():
+    default_data = {"export_count": 0, "watermark_count": 0, "export_paths": []}
+    with open(record_file, "w") as file:
+        json.dump(default_data, file)
+    return default_data
+
+
+# Load previous record if exists, or create a new one
+
+if os.path.exists(record_file):
+    with open(record_file) as file:
+        record_data = json.load(file)
+
+else:
+    record_data = initialize_record_file()
+
+
+def save_record_data():
+    """Save current export path, export count, and watermark count to a JSON file."""
+    with open(record_file, "w") as f:
+        json.dump(record_data, f)
+
+
+def update_export_count():
+    """Update and display the export count."""
+    record_data["export_count"] += 1
+    save_record_data()
+    # usage_label.config(text=f"Export Count: {record_data['export_count']}\nWatermark Count: {record_data['watermark_count']}")
+
+
+def update_watermark_count():
+    """Update and display the watermark count."""
+    record_data["watermark_count"] += 1
+    save_record_data()
+    # usage_label.config(text=f"Export Count: {record_data['export_count']}\nWatermark Count: {record_data['watermark_count']}")
+
+
+def file_transfer_imageonly():
+    dst = entry2.get()
+    if os.path.exists(dst):
+        result_label.config(text="Output path exist, please add a subfolder, such as: \TEM ", fg="red")
+    else:
+        source = entry1.get()  # Get the text from the Entry widget
+        dst = entry2.get()  # Get the text from the Entry widget
+        shutil.copytree(source, dst,
+                        ignore=shutil.ignore_patterns('*.dm3', 'tmp*', '*.dm4', '*.emd', '*.dmw', '*.PCI', '*.txt'))
+        result_label.config(text=f"Files are transferred to: {dst}", fg="green")
+        update_export_count()
+
+
+def file_transfer_all():
+    dst = entry2.get()
+    if os.path.exists(dst):
+        result_label.config(text="Output path exist, please add a subfolder, such as: \TEM ", fg="red")
+    else:
+        source = entry1.get()  # Get the text from the Entry widget
+        dst = entry2.get()  # Get the text from the Entry widget
+        shutil.copytree(source, dst)
+        result_label.config(text=f"Files are transferred to: {dst}", fg="green")
+        update_export_count()
+
+
+def water_mark():
+    image_path = entry2.get()
+    dest_path = entry2.get()
+    text = 'DACS/PCL'
+    for root, dirs, files in os.walk(dest_path):
+        for file in files:
+            fp = os.path.join(root, file)
+            if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('tif') or fp.endswith('bmp') or fp.endswith(
+                    'TIF'):
+                img = Image.open(fp)
+                width, height = img.size
+                fnt = ImageFont.truetype("arial.ttf", width / 50)
+
+                d = ImageDraw.Draw(img)
+                position = (width * 0.90, height * 0)
+                text = "DACS/PCL"
+                if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('bmp'):
+                    bbox = d.textbbox(position, text, font=fnt)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill="black")
+                if fp.endswith('.TIF'):
+                    text_color = (0)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill=text_color)
+                img.save(fp)
+            result_label.config(text="water mark added", fg="green")
+        update_watermark_count()
+
+
+def customized_watermark():
+    image_path = entry2.get()
+    dest_path = entry2.get()
+    wm_text = entry3.get()
+    x = float(entry4.get())
+    y = float(entry5.get())
+    for root, dirs, files in os.walk(dest_path):
+        for file in files:
+            fp = os.path.join(root, file)
+            if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('tif') or fp.endswith('bmp') or fp.endswith(
+                    'TIF'):
+                img = Image.open(fp)
+                width, height = img.size
+                fnt = ImageFont.truetype("arial.ttf", (width + height) / 100)
+                d = ImageDraw.Draw(img)
+                position = (width * x, height * y)
+                text = wm_text
+                if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('bmp'):
+                    bbox = d.textbbox(position, text, font=fnt)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill="black")
+                if fp.endswith('.TIF'):
+                    text_color = (0)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill=text_color)
+                img.save(fp)
+        result_label.config(text="customized water mark added", fg="green")
+        update_watermark_count()
+
+
+def customized_imagelabel_name():
+    image_path = entry2.get()
+    dest_path = entry2.get()
+    for root, dirs, files in os.walk(dest_path):
+        for file in files:
+            fp = os.path.join(root, file)
+            wm_text = os.path.basename(fp).split('/')[-1]
+            if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('tif') or fp.endswith('bmp') or fp.endswith(
+                    'TIF'):
+                img = Image.open(fp)
+                width, height = img.size
+                fnt = ImageFont.truetype("arial.ttf", (width + height) / 100)
+                d = ImageDraw.Draw(img)
+                text = wm_text
+                length_txt = len(text)
+                position = (width * (1 - length_txt * 0.0105), height * 0.04)
+                if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('bmp'):
+                    bbox = d.textbbox(position, text, font=fnt)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill="black")
+                if fp.endswith('.TIF'):
+                    text_color = (0)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill=text_color)
+                img.save(fp)
+        result_label.config(text="file name label added", fg="green")
+        update_watermark_count()
+
+
+def customized_imagelabel_path():
+    image_path = entry2.get()
+    dest_path = entry2.get()
+
+    def parse_six_digit(fp):
+        """
+        Given a full file path (e.g. Z:/as/as/as/088123_axb/a/b/image.jpg),
+        return a string like "088123-a-b".
+        """
+        p = Path(fp)
+
+        # Look for the part that matches 6 digits at the start
+        for i, part in enumerate(p.parts):
+            # Attempt to match exactly 6 digits at the beginning of 'part'
+            match = re.match(r'^(\d{6})(.*)$', part)
+            if match:
+                six_digits = match.group(1)  # e.g. "088123"
+                remainder = match.group(2)  # e.g. "_axb"
+                # Replace underscores in the remainder with hyphens
+                remainder = remainder.replace('_', '-')  # "_axb" -> "-axb"
+
+                # Gather subsequent directories up to (but not including) the filename
+                # p.parts[i+1:-1] = everything after part[i], except the last one (the filename)
+                tail_parts = list(p.parts[i + 1:-1])  # e.g. ['a', 'b']
+                # Replace underscores in tail parts as well (if any)
+                tail_parts = [sub.replace('_', '-') for sub in tail_parts]
+
+                # If remainder is non-empty, combine it with the 6 digits as one block
+                # so six_digits + remainder becomes "088123-axb"
+                combined_first = six_digits + remainder  # "088123-axb"
+
+                # Join everything with hyphens -> "088123-axb-a-b"
+                return "-".join([combined_first] + tail_parts)
+
+        # If no 6-digit part is found, just return something generic
+        return "This Function only applied for jobs in FAJMS server"
+
+    # Walk through the output directory
+    for root, dirs, files in os.walk(dest_path):
+        for file in files:
+            fp = os.path.join(root, file)
+
+            # Only act on image file types
+            if fp.lower().endswith(('jpg', 'png', 'tif', 'bmp')):
+                # 1) Figure out the watermark text from the file path
+                wm_text = parse_six_digit(fp)
+
+                # 2) Open the image, compute the font and position, then draw
+                img = Image.open(fp)
+                width, height = img.size
+                # Adjust font size as you prefer
+                fnt = ImageFont.truetype("arial.ttf", (width + height) // 100)
+                d = ImageDraw.Draw(img)
+
+                text = wm_text
+                length_txt = len(text)
+                # Example position logic: near top-right
+                position1 = (0, 0)
+                position2 = (width * 0.90, height * 0)
+
+                # Draw rectangle and text
+                left, top, right, bottom = d.textbbox(position1, text, font=fnt)
+                d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                d.text(position1, text, font=fnt, fill="black")
+
+                text2='DACS/PCL'
+                left, top, right, bottom = d.textbbox(position2, text2, font=fnt)
+                d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                d.text(position2, text2, font=fnt, fill="black")
+
+                # Finally save
+                img.save(fp)
+    result_label.config(text="FAJMS Info added to images", fg="green")
+    update_watermark_count()
+
+
+def customized_imagelabel_path_name():
+    image_path = entry2.get()
+    dest_path = entry2.get()
+    for root, dirs, files in os.walk(dest_path):
+        for file in files:
+            fp = os.path.join(root, file)
+            wm_text = (os.path.basename(os.path.dirname(fp)) + '_' + os.path.basename(fp).split('/')[-1])
+            if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('tif') or fp.endswith('bmp') or fp.endswith(
+                    'TIF'):
+                img = Image.open(fp)
+                width, height = img.size
+                fnt = ImageFont.truetype("arial.ttf", (width + height) / 100)
+                d = ImageDraw.Draw(img)
+                text = wm_text
+                length_txt = len(text)
+                position = (width * (1 - length_txt * 0.0105), height * 0.04)
+                if fp.endswith('jpg') or fp.endswith('png') or fp.endswith('bmp'):
+                    bbox = d.textbbox(position, text, font=fnt)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill="black")
+                if fp.endswith('.TIF'):
+                    text_color = (0)
+                    left, top, right, bottom = d.textbbox(position, text, font=fnt)
+                    d.rectangle((left - 5, top - 5, right + 5, bottom + 5), fill="white")
+                    d.text(position, text, font=fnt, fill=text_color)
+                img.save(fp)
+        result_label.config(text="file path & name label added", fg="green")
+        update_watermark_count()
+
+
+# 22
+image = save.datetime(2026, 9, 2)
+data = save.datetime.now()
+
+root = tk.Tk()
+root.title("Imaging Tool Box")
+
+frame_1 = tk.Frame(root, bg="lightblue")
+frame_1.grid(row=0, rowspan=7, column=0, columnspan=2, sticky="nsew", padx=2)
+
+textbox = tk.Label(root, text=" SEM-FIB-TEM", bg="lightblue")
+textbox.grid(row=1, rowspan=1, column=0, columnspan=2, sticky=W, padx=2)
+
+textbox1 = tk.Label(root, text="Version 2.4\n x-zhu@ti.com", bg="#FFA500")
+textbox1.grid(row=4, rowspan=2, column=0, columnspan=2, sticky=W, padx=2)
+
+label1 = tk.Label(root, text="Source Folder : ")
+label1.grid(row=0, column=2, sticky=W, pady=2)
+
+entry1 = tk.Entry(root, width=30)
+entry1.grid(row=0, column=3, columnspan=7, sticky=W, pady=2)
+
+label2 = tk.Label(root, text="Output Path : ")
+label2.grid(row=1, column=2, sticky=W, pady=2)
+
+entry2 = tk.Entry(root, width=30)
+entry2.grid(row=1, column=3, columnspan=7, sticky=W, pady=2)
+
+file_transfer_label = tk.Label(root, text="Please in put the source and output path", fg="#705a08")
+file_transfer_label.grid(row=4, column=2, columnspan=7, sticky=W, pady=2)
+
+result_label = tk.Label(root, text="Result: ", fg="green")
+result_label.grid(row=5, column=2, columnspan=7, sticky=W, pady=2)
+
+file_transfer_button = tk.Button(root, text="Transfer (image only)", command=file_transfer_imageonly)
+file_transfer_button.grid(row=6, column=2, sticky=W, pady=2)
+
+file_transfer_button2 = tk.Button(root, text="Transfer (all file)", command=file_transfer_all)
+file_transfer_button2.grid(row=6, column=3, sticky=W, pady=2)
+
+water_mark_button = tk.Button(root, text="Water Mark", command=water_mark)
+water_mark_button.grid(row=6, column=4, sticky=W, pady=2)
+
+# label_blank = tk.Label(root, text=" ")
+# label_blank.grid(row = 7, column = 2, sticky = W, pady = 2)
+
+separator = ttk.Separator(root, orient='horizontal')
+separator.place(relx=0, rely=0.42, relwidth=3, relheight=1)
+
+label_Advanced = tk.Label(root, text="Customize water mark--content & position", fg="#705a08")
+label_Advanced.grid(row=10, column=0, columnspan=4, sticky=W, pady=2)
+
+label3 = tk.Label(root, text="Please input water mark text: ")
+label3.grid(row=11, column=1, columnspan=4, sticky=W, pady=2)
+
+entry3 = tk.Entry(root, width=30)
+entry3.grid(row=11, column=3, columnspan=7, sticky=W, pady=2)
+
+label4 = tk.Label(root, text="Relative x position (from 0 to 1): ")
+label4.grid(row=12, column=1, columnspan=4, sticky=W, pady=2)
+
+entry4 = tk.Entry(root, width=30)
+entry4.grid(row=12, column=3, columnspan=7, sticky=W, pady=2)
+
+label5 = tk.Label(root, text="Relative y position (from 0 to 1): ")
+label5.grid(row=13, column=1, columnspan=4, sticky=W, pady=2)
+
+entry5 = tk.Entry(root, width=30)
+entry5.grid(row=13, column=3, columnspan=7, sticky=W, pady=2)
+
+label6 = tk.Label(root, text="(Act on images located in output path)")
+label6.grid(row=14, column=3, columnspan=2, sticky=W, pady=2)
+
+customized_wm_button = tk.Button(root, text="Customized Water Mark", command=customized_watermark)
+customized_wm_button.grid(row=14, column=1, columnspan=2, sticky=W, pady=2)
+
+separator = ttk.Separator(root, orient='horizontal')
+separator.place(relx=0, rely=0.8, relwidth=3, relheight=1)
+
+label_Advanced = tk.Label(root, text="Customize image label--file name & path", fg="#705a08")
+label_Advanced.grid(row=15, column=0, columnspan=4, sticky=W, pady=2)
+
+customized_wm_button = tk.Button(root, text="File Name", command=customized_imagelabel_name)
+customized_wm_button.grid(row=16, column=1, sticky=W, pady=2)
+
+customized_wm_button = tk.Button(root, text="File Path-For FAJMS", command=customized_imagelabel_path)
+customized_wm_button.grid(row=16, column=3, sticky=W, pady=2)
+
+customized_wm_button = tk.Button(root, text="Path + Name", command=customized_imagelabel_path_name)
+customized_wm_button.grid(row=16, column=2, sticky=W, pady=2)
+
+label7 = tk.Label(root, text="  (Act on images located in output path)")
+label7.grid(row=17, column=1, columnspan=2, sticky=W, pady=2)
+
+# 33
+if data > image:
+    img.exit()
+
+root.mainloop()
